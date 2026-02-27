@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auditStore, DEFAULT_AUDIT } from '@/lib/auditMockStore';
 
 const STATUSES = ['DRAFT', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED', 'REJECTED'];
 const STORE_NAMES = ['Waterfront Flagship', 'V&A Quay', 'Clock Tower', 'Breakwater Lodge', 'Swing Bridge', 'East Pier Kiosk', 'North Jetty', 'Marina Walk'];
@@ -53,11 +54,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const storeObj = MOCK_AUDITS.find((a) => a.storeId === body.storeId)?.store ?? MOCK_AUDITS[0].store;
     const newAudit = {
-      ...MOCK_AUDITS[0],
+      ...DEFAULT_AUDIT,
       id: `a_new_${Date.now()}`,
-      storeId: body.storeId ?? MOCK_AUDITS[0].storeId,
-      store: MOCK_AUDITS.find((a) => a.storeId === body.storeId)?.store ?? MOCK_AUDITS[0].store,
+      storeId: body.storeId ?? DEFAULT_AUDIT.storeId,
+      store: storeObj,
       status: 'DRAFT',
       scheduledDate: body.scheduledDate ?? new Date().toISOString().split('T')[0],
       auditType: body.auditType ?? 'General',
@@ -69,8 +71,11 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    auditStore.set(newAudit.id, newAudit);
     return NextResponse.json({ success: true, timestamp: new Date().toISOString(), data: newAudit });
   } catch {
-    return NextResponse.json({ success: true, timestamp: new Date().toISOString(), data: { ...MOCK_AUDITS[0], id: `a_new_${Date.now()}`, status: 'DRAFT' } });
+    const fallback = { ...DEFAULT_AUDIT, id: `a_new_${Date.now()}`, status: 'DRAFT', complianceScore: null, items: [] };
+    auditStore.set(fallback.id, fallback);
+    return NextResponse.json({ success: true, timestamp: new Date().toISOString(), data: fallback });
   }
 }

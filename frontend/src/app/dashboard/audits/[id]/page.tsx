@@ -88,7 +88,7 @@ export default function AuditDetailPage() {
 
       {/* Action buttons */}
       <div className="flex flex-wrap gap-3">
-        {audit.status === AuditStatus.DRAFT && isCoordinator && (
+        {audit.status === AuditStatus.DRAFT && (isCoordinator || isOps) && (
           <button
             disabled={actionLoading}
             onClick={() => handleAction(() => auditsApi.start(audit.id))}
@@ -97,7 +97,7 @@ export default function AuditDetailPage() {
             <Play size={16} /> Start Audit
           </button>
         )}
-        {audit.status === AuditStatus.IN_PROGRESS && isCoordinator && (
+        {audit.status === AuditStatus.IN_PROGRESS && (isCoordinator || isOps) && (
           <>
             <Link
               href={`/dashboard/audits/${audit.id}/conduct`}
