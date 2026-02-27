@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
   LayoutDashboard, Store, ClipboardList, Award, Users,
-  MapPin, Bell, X, ChevronRight, ShieldCheck,
+  MapPin, Bell, X, ChevronRight, ShieldCheck, ClipboardEdit,
 } from 'lucide-react';
 import { Role } from '@/types';
 import { cn } from '@/lib/utils';
@@ -39,6 +39,12 @@ const NAV_ITEMS: NavItem[] = [
     href: '/dashboard/audits',
     icon: <ClipboardList size={18} />,
     roles: [Role.OPS_MANAGER, Role.EXEC, Role.PROPERTY_COORDINATOR, Role.STORE],
+  },
+  {
+    label: 'Templates',
+    href: '/dashboard/audit-templates',
+    icon: <ClipboardEdit size={18} />,
+    roles: [Role.OPS_MANAGER, Role.PROPERTY_COORDINATOR],
   },
   {
     label: 'Certificates',

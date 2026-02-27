@@ -1,3 +1,50 @@
+// ─── Audit Templates ──────────────────────────────────────────────────────────
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type QuestionResult = 'YES' | 'NO' | 'NA';
+
+export interface TemplateQuestion {
+  id: string;
+  text: string;
+  riskLevel: RiskLevel;
+  requiresPhoto: boolean;
+  requiresNotes: boolean;
+  weight: number; // 1–10 for scoring
+  sortOrder: number;
+}
+
+export interface TemplateSection {
+  id: string;
+  title: string;
+  questions: TemplateQuestion[];
+  sortOrder: number;
+}
+
+export interface AuditTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  sections: TemplateSection[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuestionResponse {
+  questionId: string;
+  result: QuestionResult | null;
+  notes: string;
+  photoDataUrls: string[];
+}
+
+export interface ConductedAudit {
+  auditId: string;
+  templateId: string;
+  responses: Record<string, QuestionResponse>;
+  startedAt: string;
+  submittedAt?: string;
+  score?: number;
+}
+
 // ─── Roles ────────────────────────────────────────────────────────────────────
 export enum Role {
   STORE = 'STORE',

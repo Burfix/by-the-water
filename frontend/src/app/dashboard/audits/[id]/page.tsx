@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle, XCircle, Play, Send, Image } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Play, Send, Image, ClipboardEdit } from 'lucide-react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Audit, AuditStatus, AuditItemResult, Role } from '@/types';
 import { auditsApi } from '@/lib/api';
@@ -97,13 +98,21 @@ export default function AuditDetailPage() {
           </button>
         )}
         {audit.status === AuditStatus.IN_PROGRESS && isCoordinator && (
-          <button
-            disabled={actionLoading}
-            onClick={() => handleAction(() => auditsApi.submit(audit.id))}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Send size={16} /> Submit Audit
-          </button>
+          <>
+            <Link
+              href={`/dashboard/audits/${audit.id}/conduct`}
+              className="btn-primary flex items-center gap-2"
+            >
+              <ClipboardEdit size={16} /> Conduct Audit
+            </Link>
+            <button
+              disabled={actionLoading}
+              onClick={() => handleAction(() => auditsApi.submit(audit.id))}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <Send size={16} /> Submit Audit
+            </button>
+          </>
         )}
         {audit.status === AuditStatus.SUBMITTED && isOps && (
           <>
