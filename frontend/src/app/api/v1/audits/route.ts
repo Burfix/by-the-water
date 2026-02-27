@@ -50,6 +50,27 @@ export async function GET(request: Request) {
   });
 }
 
-export async function POST() {
-  return NextResponse.json({ success: true, timestamp: new Date().toISOString(), data: MOCK_AUDITS[0] });
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const newAudit = {
+      ...MOCK_AUDITS[0],
+      id: `a_new_${Date.now()}`,
+      storeId: body.storeId ?? MOCK_AUDITS[0].storeId,
+      store: MOCK_AUDITS.find((a) => a.storeId === body.storeId)?.store ?? MOCK_AUDITS[0].store,
+      status: 'DRAFT',
+      scheduledDate: body.scheduledDate ?? new Date().toISOString().split('T')[0],
+      auditType: body.auditType ?? 'General',
+      notes: body.notes ?? null,
+      complianceScore: null,
+      items: [],
+      photos: [],
+      rejectionReason: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    return NextResponse.json({ success: true, timestamp: new Date().toISOString(), data: newAudit });
+  } catch {
+    return NextResponse.json({ success: true, timestamp: new Date().toISOString(), data: { ...MOCK_AUDITS[0], id: `a_new_${Date.now()}`, status: 'DRAFT' } });
+  }
 }
