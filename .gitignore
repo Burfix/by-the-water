@@ -1,0 +1,19 @@
+# backend
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/.env.local
+
+# frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env
+frontend/.env.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
