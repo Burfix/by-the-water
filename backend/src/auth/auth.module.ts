@@ -15,6 +15,7 @@ import { User } from '../entities/user.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -29,11 +30,10 @@ import { User } from '../entities/user.entity';
   providers: [
     AuthService,
     JwtStrategy,
-    // Apply JWT guard globally
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-    // Apply RBAC guard globally
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}
+

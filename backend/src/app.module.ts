@@ -21,6 +21,7 @@ import { ComplianceModule } from './compliance/compliance.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DatabaseUploadModule } from './database-upload/database-upload.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -45,7 +46,7 @@ import { DatabaseUploadModule } from './database-upload/database-upload.module';
         database: config.get<string>('database.name'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-        synchronize: config.get<string>('app.nodeEnv') !== 'production',
+        synchronize: config.get<string>('app.nodeEnv') === 'local',
         logging: config.get<string>('app.nodeEnv') === 'development',
         ssl:
           config.get<string>('app.nodeEnv') === 'production'
@@ -82,6 +83,7 @@ import { DatabaseUploadModule } from './database-upload/database-upload.module';
     SchedulerModule,
     DashboardModule,
     DatabaseUploadModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

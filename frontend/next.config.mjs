@@ -1,8 +1,26 @@
 /** @type {import('next').NextConfig} */
+
+// In production (Vercel), BACKEND_URL must be set to the deployed backend URL.
+// Locally it defaults to http://localhost:3001.
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+
+if (process.env.NODE_ENV === 'production' && !process.env.BACKEND_URL) {
+  throw new Error(
+    'BACKEND_URL env var is required in production. ' +
+    'Set it in your Vercel project settings to the deployed backend URL.',
+  );
+}
+
 const nextConfig = {
   reactStrictMode: true,
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+  async rewrites() {
+    return [
+      {
+        // Proxy all /api/v1/* calls from browser → backend (same-origin, avoids CORS/cookie issues)
+        source: '/api/v1/:path*',
+        destination: `${BACKEND_URL}/api/v1/:path*`,
+      },
+    ];
   },
   images: {
     remotePatterns: [
@@ -27,3 +45,4 @@ const nextConfig = {
 };
 
 export default nextConfig;
+

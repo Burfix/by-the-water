@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Frontend Dev Server",
+			"type": "shell",
+			"command": "cd frontend && NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1 npm run dev -- --port 3000",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start Frontend Dev Server",
+			"type": "shell",
+			"command": "cd frontend && NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1 npm run dev -- --port 3000",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

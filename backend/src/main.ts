@@ -2,9 +2,11 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, ClassSerializerInterceptor, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
@@ -16,6 +18,9 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('app.port', 3001);
   const nodeEnv = configService.get<string>('app.nodeEnv', 'development');
 
+  // ── Cookie parser (required for httpOnly cookie auth) ──────────────────────
+  app.use(cookieParser());
+
   // ── Global prefix ──────────────────────────────────────────────────────────
   app.setGlobalPrefix('api/v1');
 
@@ -23,13 +28,20 @@ async function bootstrap(): Promise<void> {
   const corsOrigins = configService
     .get<string>('app.corsOrigins', 'http://localhost:3000')
     .split(',')
-    .map((o) => o.trim());
+    .map((o) => o.trim())
+    .filter(Boolean);
 
   app.enableCors({
     origin: corsOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'X-Correlation-Id',
+    ],
+    exposedHeaders: ['X-Correlation-Id'],
+    credentials: true, // required for cookies to be sent cross-origin
   });
 
   // ── Global pipes ───────────────────────────────────────────────────────────
@@ -49,6 +61,7 @@ async function bootstrap(): Promise<void> {
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(reflector),
+    new LoggingInterceptor(),
     new TransformInterceptor(),
   );
 
@@ -75,6 +88,7 @@ async function bootstrap(): Promise<void> {
       .addTag('Notifications', 'Notification management')
       .addTag('Dashboard', 'Analytics and metrics')
       .addTag('Storage', 'File upload / signed URLs')
+      .addTag('Health', 'Health and readiness checks')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
@@ -89,3 +103,4 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap();
+

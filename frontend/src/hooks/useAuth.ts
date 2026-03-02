@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { User, Role, AuthTokens } from '@/types';
+import { User, Role } from '@/types';
 import { authApi } from '@/lib/api';
-import { setAuthTokens, clearAuth, getStoredUser, getDashboardPath } from '@/lib/auth';
+import { getDashboardPath } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -12,7 +12,7 @@ interface UseAuthReturn {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   hasRole: (...roles: Role[]) => boolean;
 }
 
@@ -21,21 +21,22 @@ export function useAuth(): UseAuthReturn {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // On mount: verify session by calling /auth/me (cookie is sent automatically)
   useEffect(() => {
-    const storedUser = getStoredUser();
-    setUser(storedUser);
-    setIsLoading(false);
+    authApi.getMe()
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(
     async (email: string, password: string) => {
       setIsLoading(true);
       try {
-        const tokens: AuthTokens = await authApi.login(email, password);
-        setAuthTokens(tokens);
-        setUser(tokens.user);
-        toast.success(`Welcome back, ${tokens.user.firstName}!`);
-        router.push(getDashboardPath(tokens.user.role));
+        const { user: loggedIn } = await authApi.login(email, password);
+        setUser(loggedIn);
+        toast.success(`Welcome back, ${loggedIn.firstName}!`);
+        router.push(getDashboardPath(loggedIn.role as Role));
       } catch (err: any) {
         const message = err.response?.data?.message || 'Login failed. Please try again.';
         toast.error(message);
@@ -47,14 +48,18 @@ export function useAuth(): UseAuthReturn {
     [router],
   );
 
-  const logout = useCallback(() => {
-    clearAuth();
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // swallow — cookies cleared server-side, redirect regardless
+    }
     setUser(null);
     router.push('/login');
   }, [router]);
 
   const hasRole = useCallback(
-    (...roles: Role[]) => !!user && roles.includes(user.role),
+    (...roles: Role[]) => !!user && roles.includes(user.role as Role),
     [user],
   );
 
@@ -67,3 +72,5 @@ export function useAuth(): UseAuthReturn {
     hasRole,
   };
 }
+
+

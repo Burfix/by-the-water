@@ -1,35 +1,37 @@
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import Cookies from 'js-cookie';
-import { AuthTokens, ApiResponse, PaginatedResult, DashboardMetrics, Audit, Store, Certificate, Notification, User, Precinct, AuditItem } from '@/types';
+import axios, { AxiosInstance, AxiosError } from 'axios';
+import { ApiResponse, PaginatedResult, DashboardMetrics, Audit, Store, Certificate, Notification, User, Precinct, AuditItem } from '@/types';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is not set. Check your .env file.');
+}
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
+  withCredentials: true, // send httpOnly cookies on every request
 });
 
-// ── Request interceptor – attach JWT ────────────────────────────────────────
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = Cookies.get('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// ── Response interceptor – unwrap data, handle 401 ──────────────────────────
+// ── Response interceptor – handle 401 ────────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      Cookies.remove('access_token');
-      Cookies.remove('refresh_token');
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+    const originalRequest = error.config as typeof error.config & { _retry?: boolean };
+
+    // Attempt one silent token refresh on 401, then redirect to login
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+        return api(originalRequest);
+      } catch {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
       }
     }
+
     return Promise.reject(error);
   },
 );
@@ -42,10 +44,16 @@ function unwrap<T>(response: { data: ApiResponse<T> }): T {
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
   login: (email: string, password: string) =>
-    api.post<ApiResponse<AuthTokens>>('/auth/login', { email, password }).then(unwrap),
+    api.post<ApiResponse<{ user: User }>>('/auth/login', { email, password }).then(unwrap),
 
   register: (data: { email: string; password: string; firstName: string; lastName: string; role?: string }) =>
-    api.post<ApiResponse<AuthTokens>>('/auth/register', data).then(unwrap),
+    api.post<ApiResponse<{ user: User }>>('/auth/register', data).then(unwrap),
+
+  refresh: () =>
+    api.post<ApiResponse<{ user: User }>>('/auth/refresh').then(unwrap),
+
+  logout: () =>
+    api.post('/auth/logout'),
 
   getMe: () => api.get<ApiResponse<User>>('/auth/me').then(unwrap),
 };
