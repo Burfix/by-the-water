@@ -20,6 +20,7 @@ import { StorageModule } from './storage/storage.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { DatabaseUploadModule } from './database-upload/database-upload.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ComplianceModule,
     SchedulerModule,
     DashboardModule,
+    DatabaseUploadModule,
   ],
 })
 export class AppModule {}

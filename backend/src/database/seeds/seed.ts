@@ -21,6 +21,11 @@ import { User } from '../../entities/user.entity';
 import { Precinct } from '../../entities/precinct.entity';
 import { Store } from '../../entities/store.entity';
 import { StoreAssignment } from '../../entities/store-assignment.entity';
+import { Audit } from '../../entities/audit.entity';
+import { AuditItem } from '../../entities/audit-item.entity';
+import { AuditPhoto } from '../../entities/audit-photo.entity';
+import { Certificate } from '../../entities/certificate.entity';
+import { Notification } from '../../entities/notification.entity';
 import { Role } from '../../common/enums/role.enum';
 
 const dataSource = new DataSource({
@@ -30,8 +35,8 @@ const dataSource = new DataSource({
   username: process.env.DB_USER || 'compliance_user',
   password: process.env.DB_PASSWORD || 'compliance_pass',
   database: process.env.DB_NAME || 'compliance_db',
-  entities: [User, Precinct, Store, StoreAssignment],
-  synchronize: true,
+  entities: [User, Precinct, Store, StoreAssignment, Audit, AuditItem, AuditPhoto, Certificate, Notification],
+  synchronize: false,
   logging: false,
 });
 
