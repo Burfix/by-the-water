@@ -37,22 +37,29 @@ import { HealthModule } from './health/health.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('database.host'),
-        port: config.get<number>('database.port'),
-        username: config.get<string>('database.user'),
-        password: config.get<string>('database.password'),
-        database: config.get<string>('database.name'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-        synchronize: config.get<string>('app.nodeEnv') === 'local',
-        logging: config.get<string>('app.nodeEnv') === 'development',
-        ssl:
-          config.get<string>('app.nodeEnv') === 'production'
-            ? { rejectUnauthorized: false }
-            : false,
-      }),
+      useFactory: (config: ConfigService) => {
+        const isProduction = config.get<string>('app.nodeEnv') === 'production';
+        const dbUrl = config.get<string>('database.url');
+        const base = {
+          type: 'postgres' as const,
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+          synchronize: config.get<string>('app.nodeEnv') === 'local',
+          logging: config.get<string>('app.nodeEnv') === 'development',
+          ssl: isProduction ? { rejectUnauthorized: false } : false,
+        };
+        if (dbUrl) {
+          return { ...base, url: dbUrl };
+        }
+        return {
+          ...base,
+          host: config.get<string>('database.host'),
+          port: config.get<number>('database.port'),
+          username: config.get<string>('database.user'),
+          password: config.get<string>('database.password'),
+          database: config.get<string>('database.name'),
+        };
+      },
     }),
 
     // ── Rate limiting ──────────────────────────────────────────────────────
