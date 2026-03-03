@@ -15,6 +15,7 @@ import * as path from 'path';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 
+dotenv.config({ path: path.resolve(__dirname, '../../../.env.local') });
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 import { User } from '../../entities/user.entity';
@@ -28,17 +29,32 @@ import { Certificate } from '../../entities/certificate.entity';
 import { Notification } from '../../entities/notification.entity';
 import { Role } from '../../common/enums/role.enum';
 
-const dataSource = new DataSource({
-  type: 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  username: process.env.DB_USER || 'compliance_user',
-  password: process.env.DB_PASSWORD || 'compliance_pass',
-  database: process.env.DB_NAME || 'compliance_db',
-  entities: [User, Precinct, Store, StoreAssignment, Audit, AuditItem, AuditPhoto, Certificate, Notification],
-  synchronize: false,
-  logging: false,
-});
+function buildDataSourceOptions() {
+  const dbUrl = process.env.DATABASE_URL;
+  const isProduction = process.env.NODE_ENV === 'production';
+  const base = {
+    type: 'postgres' as const,
+    entities: [User, Precinct, Store, StoreAssignment, Audit, AuditItem, AuditPhoto, Certificate, Notification],
+    // Always synchronize during seed — creates schema if it doesn't exist
+    synchronize: true,
+    logging: false,
+    ssl: isProduction ? { rejectUnauthorized: false } : false,
+  };
+  if (dbUrl) {
+    console.log('🔗 Using DATABASE_URL');
+    return { ...base, url: dbUrl };
+  }
+  return {
+    ...base,
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    username: process.env.DB_USER || 'compliance_user',
+    password: process.env.DB_PASSWORD || 'compliance_pass',
+    database: process.env.DB_NAME || 'compliance_db',
+  };
+}
+
+const dataSource = new DataSource(buildDataSourceOptions());
 
 async function hashPw(plain: string): Promise<string> {
   return bcrypt.hash(plain, 12);

@@ -44,7 +44,7 @@ import { HealthModule } from './health/health.module';
           type: 'postgres' as const,
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-          synchronize: config.get<string>('app.nodeEnv') === 'local',
+          synchronize: config.get<string>('app.nodeEnv') === 'local' || process.env.DB_SYNC === 'true',
           logging: config.get<string>('app.nodeEnv') === 'development',
           ssl: isProduction ? { rejectUnauthorized: false } : false,
         };
