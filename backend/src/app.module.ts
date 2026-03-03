@@ -47,6 +47,8 @@ import { HealthModule } from './health/health.module';
           synchronize: config.get<string>('app.nodeEnv') === 'local' || process.env.DB_SYNC === 'true',
           logging: config.get<string>('app.nodeEnv') === 'development',
           ssl: isProduction ? { rejectUnauthorized: false } : false,
+          retryAttempts: 10,
+          retryDelay: 3000,
         };
         if (dbUrl) {
           return { ...base, url: dbUrl };
